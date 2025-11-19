@@ -2,12 +2,13 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>EmoTIC – Registro Emocional</title>
+<title>EmoTIC – Prototipo</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
     body {
         font-family: Arial, sans-serif;
-        background: #7b9bcc;
+        background: #f2f4f7;
         margin: 0;
         padding: 0;
         display: flex;
@@ -15,53 +16,15 @@
         align-items: center;
     }
 
-    /* === BANNER === */
-    .header {
+    h1 {
+        background: #4a79ff;
+        color: white;
+        padding: 15px 30px;
         width: 100%;
-        background: #7b9bcc;
-        padding: 10px 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        position: relative;
-    }
-
-    .banner {
         text-align: center;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+        margin: 0;
     }
 
-    .banner .logo {
-        height: 150px;
-        width: 190px;
-        object-fit: cover;
-        border-radius: 7%;
-        background: rgb(216, 207, 198);
-        padding: 2px;
-        box-shadow: 0 0 8px #0003;
-        margin-bottom: 8px;
-    }
-
-    .btn-admin {
-        position: absolute;
-        right: 20px;
-        top: 20px;
-        background: white;
-        color: #4a79ff;
-        padding: 10px 18px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: bold;
-        transition: 0.2s;
-    }
-
-    .btn-admin:hover {
-        background: #dfe6ff;
-    }
-
-    /* === CONTENEDOR PRINCIPAL === */
     .container {
         max-width: 650px;
         background: white;
@@ -69,10 +32,8 @@
         margin-top: 20px;
         border-radius: 12px;
         box-shadow: 0 0 10px #0001;
-        text-align: center;
     }
 
-    /* === EMOJIS === */
     .emociones {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -101,43 +62,20 @@
         border-left: 4px solid #4a79ff;
         margin-top: 10px;
         display: none;
-        text-align: left;
     }
 
-    /* === LENGUAJE CORPORAL === */
-    #lenguajeCorporalBox {
+    canvas {
         margin-top: 25px;
-        background: #f5f5f5;
-        padding: 20px;
+        background: #ffffff;
+        padding: 10px;
         border-radius: 10px;
-        text-align: center;
-    }
-
-    #emojiGrande {
-        font-size: 70px;
-    }
-
-    .info-box {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 20px;
     }
 </style>
-
 </head>
 <body>
 
-<!-- === BANNER === -->
-<div class="header">
-    <header class="banner">
-        <img src="logo.png" alt="Logo EmoTIC" class="logo">
-       </header>
+<h1>EmoTIC – Registro Emocional</h1>
 
-    <a href="login.html" class="btn-admin">Admin</a>
-</div>
-
-<!-- === CONTENIDO PRINCIPAL === -->
 <div class="container">
 
     <h2>¿Cómo te sientes hoy?</h2>
@@ -154,17 +92,9 @@
 
     <div id="mensaje"></div>
 
-    <!-- === LENGUAJE CORPORAL === -->
-    <div id="lenguajeCorporalBox">
+    <h3>Mapa emocional en tiempo real (Gráfica)</h3>
 
-        <div class="info-box">
-            <div id="emojiGrande">🙂</div>
-            <div>
-                <p id="infoCorporal">Selecciona una emoción para ver detalles.</p>
-                <p id="infoCalma" style="font-weight:bold; color:#4a79ff;"></p>
-            </div>
-        </div>
-    </div>
+    <canvas id="grafica" width="600" height="300"></canvas>
 
 </div>
 
@@ -189,51 +119,47 @@
         "Indiferencia": "A veces sentirse ‘neutral’ también es parte del día."
     };
 
-    const lenguajeCorporal = {
-        "Alegría": "<b>Alegría</b>",
-        "Tristeza": "<b>Tristeza</b>",
-        "Enojo": "<b>Enojo</b>",
-        "Miedo": "<b>Miedo</b>",
-        "Calma": "<b>Calma</b>",
-        "Sorpresa": "<b>Sorpresa</b>",
-        "Indiferencia": "<b>Indiferencia</b>"
-    };
+    // === CREACIÓN DEL GRÁFICO ===
+    const ctx = document.getElementById('grafica').getContext('2d');
 
+    let grafica = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(datos),
+            datasets: [{
+                label: 'Cantidad de emociones',
+                data: Object.values(datos),
+                backgroundColor: [
+                    '#ffdd57', '#a3c4f3', '#ff6b6b',
+                    '#b084f8', '#91eac2', '#ffd6ff', '#d3d3d3'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
 
-    const calmaTips = {
-        "Alegría": "Canaliza la energía haciendo algo creativo o compartiendo con otros.",
-        "Tristeza": "Respira profundo, toma agua y habla con alguien de confianza.",
-        "Enojo": "Inhala 4 segundos, exhala 6. Camina 2 minutos.",
-        "Miedo": "Respira lento y reconoce qué estás sintiendo.",
-        "Calma": "Mantén tu ritmo, estira tu cuerpo, disfruta este momento.",
-        "Sorpresa": "Respira y piensa un momento antes de reaccionar.",
-        "Indiferencia": "Activa tus sentidos: escucha música o mueve el cuerpo."
-    };
-
-    const emojis = {
-        "Alegría": "😊",
-        "Tristeza": "😢",
-        "Enojo": "😡",
-        "Miedo": "😨",
-        "Calma": "😌",
-        "Sorpresa": "😮",
-        "Indiferencia": "😐"
-    };
-
+    // === FUNCIÓN PARA REGISTRAR EMOCIÓN ===
     function registrar(emocion) {
-
         datos[emocion]++;
 
-        document.getElementById("mensaje").style.display = "block";
-        document.getElementById("mensaje").innerHTML =
-            `<b>${emocion}</b>: ${mensajes[emocion]}`;
+        let msg = document.getElementById("mensaje");
+        msg.style.display = "block";
+        msg.innerHTML = `<b>${emocion}</b>: ${mensajes[emocion]}`;
 
-        document.getElementById("emojiGrande").innerHTML = emojis[emocion];
-        document.getElementById("infoCorporal").innerHTML = lenguajeCorporal[emocion];
-        document.getElementById("infoCalma").innerHTML = calmaTips[emocion];
+        actualizarGrafica();
+    }
+
+    // === ACTUALIZAR GRÁFICA ===
+    function actualizarGrafica() {
+        grafica.data.datasets[0].data = Object.values(datos);
+        grafica.update();
     }
 </script>
 
 </body>
 </html>
-
